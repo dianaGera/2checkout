@@ -1,0 +1,46 @@
+{% if not user.subscription.promotion %}
+    <div class="content-section" id="board-table">
+        <h2>Vouchers<h2/>
+        <div class="container">
+            <div class="row">
+                {% for promotion in promotions %}
+                    <div class="col-lg-2">
+                        <div class="card">
+                            <div class="card-body">
+                                <h3 class="text-center">{{promotion.title}}</h3>
+                                <button type="button" class="btn-sm btn-block btn-primary" data-toggle="modal" data-target="#ModalVouchers{{promotion.id}}">
+                                    Apply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Modal Vouchers -->
+                    <div class="modal fade" id="ModalVouchers{{promotion.id}}" tabindex="-1" role="dialog"
+                            aria-labelledby="exampleModalLabel"
+                            aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="ModalLabel">Vouchers</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    Do you really want to apply the coupon?
+                                </div>
+                                <div class="modal-footer">
+                                    <form action="{% url 'apply_vouchers' pk=user.subscription.id coupon_id=promotion.id %}" method="POST">
+                                        {% csrf_token %}
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                                        <button class="btn btn-success">Yes</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endif %}

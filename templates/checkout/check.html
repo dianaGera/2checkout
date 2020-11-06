@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load static %}
+{% block stylesheet %}
+    <link href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css'>
+    <script src='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js'></script>
+    <link href='https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/3.6.95/css/materialdesignicons.css'>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        function validate(coupon) {
+            var input = document.getElementById('in').value;
+            $.ajax({
+                url: "/subscription/api/get_coupon_code/?format=json",
+                dataType: "json",
+                cache: "false",
+                success: function (t) {
+                    old_price = document.getElementById('old_price').value
+                    for(var key in t) {
+                        var coupon = key;
+                        if(input.toString().toUpperCase() == coupon.toString().toUpperCase()){
+                            if(t[coupon].toString().includes("%")) {
+                                new_price = parseFloat(old_price) - (parseFloat(old_price) * parseFloat(t[coupon])) / 100
+                            }else {
+                                new_price = old_price - parseFloat(t[coupon])
+                            }
+                            document.getElementById('new_price').innerHTML = new_price
+                            document.getElementById("price").value = new_price;
+                            document.getElementById('err').innerHTML = '';
+                            return true;
+                        } else {
+                            document.getElementById('new_price').innerHTML = old_price
+                            document.getElementById('err').innerHTML="Invalid coupon";
+                        }
+                    }
+                },
+                error: function (e, t, a) {
+                    alert(e.status)
+                }
+            })
+        }
+    </script>
+{% endblock %}
+
+{% block content %}
+    <h2 style="text-align:center;">Chosen plan {{ plan.name }} at the price of <span id="new_price" name='new_price'>{{ plan.price }}</span> per month</h2>
+    <div class="content-section">
+        <form action="" method="post">
+            {% csrf_token %}
+            <div class="row justify-content-md-center">
+                <div class="col-md-6 mb-3">
+                    <label for="id_cc_number">Credit card number:</label>
+                    <input type="tel" name="cc_number" class="form-control" pattern="\d{16}"
+                           autocomplete="cc-number"
+                           autocorrect="off" spellcheck="off" autocapitalize="off" required="" id="id_cc_number">
+                    <div class="invalid-feedback"> Credit card number is required</div>
+                </div>
+            </div>
+            <div class="row justify-content-md-center">
+                <div class="col-md-3 mb-3">
+                    <label for="id_cc_expiry">Expiration Date:</label>
+                    <input type="text" name="cc_expiry" class="form-control" pattern="\d\d/\d\d" placeholder="MM/YY"
+                           autocomplete="cc-exp" autocorrect="off" spellcheck="off" autocapitalize="off" required=""
+                           id="id_cc_expiry">
+                    <div class="invalid-feedback"> Expiration date required</div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="id_cc_code">CVV/CVC:</label>
+                    <input type="tel" name="cc_code" class="form-control" pattern="\d{3}" autocomplete="cc-csc"
+                           autocorrect="off" spellcheck="off" autocapitalize="off" required="" id="id_cc_code">
+                    <div class="invalid-feedback"> Security code required</div>
+                </div>
+            </div>
+            <div class="row justify-content-md-center">
+                <div class="col-md-6 mb-3">
+                    <div class="form-group">
+                        <label>Have coupon?</label>
+                        <div class="input-group"> 
+                            <input type="text" class="form-control" name="coupon" id="in" placeholder="Coupon code">
+                            <span class="input-group-append">
+                                <input class="btn btn-primary btn-apply" type="button" value="Submit" onClick="validate(coupon)" />
+                            </span>
+                        </div>
+                    </div>
+                    <span id="err"></span>
+                </div>
+            </div>
+            <input id="price" name="price" hidden value="{{ plan.price }}">
+            <input id="old_price" name="old_price" hidden value="{{ plan.price }}">
+            <div class="row justify-content-md-center">
+                <div class="col-md-6 mb-3">
+                    <hr>
+                    <button class="btn btn-primary btn-lg btn-block" type="submit">Continue to checkout</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

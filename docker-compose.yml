@@ -1,0 +1,60 @@
+version: '3.7'
+
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - pg_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+
+#  redis:
+#    image: redis
+#    command: redis-server
+#    volumes:
+#      - ../data/redis:/data
+#    restart: always
+
+  django:
+    container_name: config
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: bash -c "python /usr/src/dm_rest/manage.py migrate --noinput &&
+      python3 /usr/src/dm_rest/manage.py runserver 0.0.0.0:5000"
+    volumes:
+      - .:/usr/src/dm_rest
+    ports:
+      - 5000:5000
+    depends_on:
+      - db
+#      - redis
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=x4cglwg5%+s^_++wmqoe777qil-*vx2*x9$fq3@mc5%faaulcp
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - CELERY_BROKER=redis://redis:6379/0
+      - CELERY_BACKEND=redis://redis:6379/0
+
+#  celery:
+#    build: .
+#    command: celery -A myproject worker -l info -P eventlet
+#
+#    volumes:
+#      - .:/code
+#    depends_on:
+#      - redis
+#      - db
+#    environment:
+#      - DEBUG=1
+#      - SECRET_KEY=x4cglwg5%+s^_++wmqoe777qil-*vx2*x9$fq3@mc5%faaulcp
+#      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+#      - CELERY_BROKER=redis://redis:6379/0
+#      - CELERY_BACKEND=redis://redis:6379/0
+
+volumes:
+  pg_data:
+
+

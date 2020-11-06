@@ -1,0 +1,67 @@
+{% if user.subscription.auto_update %}
+    <p>Subscription renews automatically. <br>
+        The next charge will occur on {{ user.subscription.expiration_date }}<br/>
+        To cancel automatic renewal, click on button.
+    </p>
+    <button type="button" class="btn btn-danger" data-toggle="modal"
+            data-target="#exampleModal">
+        Cancel subscription
+    </button>
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog"
+            aria-labelledby="exampleModalLabel"
+            aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Cancel subscription</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to opt out of automatic renewal of your subscription?
+                </div>
+                <div class="modal-footer">
+                    <form action="{% url 'stop_auto_subscription' pk=user.subscription.id %}" method="POST">
+                        {% csrf_token %}
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                        <button class="btn btn-danger">Yes</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% else %}
+    <button type="button" class="btn btn-primary" data-toggle="modal"
+            data-target="#exampleModal">
+        Enable subscription
+    </button>
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog"
+            aria-labelledby="exampleModalLabel"
+            aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to resume automatic renewal of your subscription?
+                </div>
+                <div class="modal-footer">
+                    <form action="{% url 'enable_auto_subscription' pk=user.subscription.id %}" method="POST">
+                        {% csrf_token %}
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                        <button class="btn btn-danger">Yes</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endif %}

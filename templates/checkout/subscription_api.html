@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block stylesheet %}
+    <link rel="stylesheet" href="{% static 'css/subscription.css' %}">
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/jquery.slim.min.js' %}"></script>
+    <script src="{% static 'js/subscription.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <section class="pricing py-5">
+        {% if not user.subscription %}
+            <h1 style="text-align:center;">You don't have a subscription</h1><br/>
+            <div class="container">
+                <div class="row">
+                    {% for plan in plans %}
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title text-muted text-uppercase text-center">{{ plan }}</h5>
+                                    <h6 class="card-price text-center">${{ plan.price }}<span
+                                            class="period">/{{ plan.period }}</span>
+                                    </h6>
+                                    <hr>
+                                    <ul class="fa-ul">
+                                        {% for item in plan.get_items %}
+                                            <li><span class="fa-li"><i class="fas fa-check"></i></span>{{ item }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                    <a href="{% url 'check' plan.id %}" class="btn btn-block btn-primary text-uppercase"
+                                       type="button">Subscribe</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="content-section" id="board-table">
+                <h2>Subscription is {% if user.subscription.trial %}trial{% else %}valid{% endif %}</h2>
+                <h8>Till {{ user.subscription.expiration_date }}</h8>
+                <h6>{% if user.subscription.promotion %}Your voucher has been applied. It will take effect from the next cycle.{% endif %}</h6>
+                <br/>
+                {% include 'includes/cancel_enable_subscription.html' %}
+            </div>
+            {% include 'includes/promotion.html' %}
+        {% endif %}
+    </section>
+{% endblock %}

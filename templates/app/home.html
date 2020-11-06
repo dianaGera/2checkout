@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="content-section">
+        <h1 style="text-align:center;">Home page</h1>
+        {% if user.is_authenticated %}
+            {% if not user.subscription %}
+                <p class="nav-item nav-link">Free content</p>
+            {% else %}
+                <p class="nav-item nav-link">Paid content</p>
+            {% endif %}
+        {% endif %}
+
+    </div>
+{% endblock %}
