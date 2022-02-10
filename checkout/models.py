@@ -1,11 +1,5 @@
-import datetime
-from datetime import timedelta
-
 from django.db import models
 from creditcards.models import CardNumberField, CardExpiryField, SecurityCodeField
-from accounts.models import MyUser
-from .subscription import headers, extend_a_subscription
-from django.core.exceptions import ValidationError
 
 
 class Payment(models.Model):
@@ -125,42 +119,3 @@ class PlanItem(models.Model):
         verbose_name_plural = 'Plan items'
 
 
-class Subscription(models.Model):
-    user = models.OneToOneField(MyUser, on_delete=models.CASCADE, related_name='subscription', null=True, blank=True)
-    plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
-    subscription_code = models.CharField(max_length=10, null=False, blank=False)
-    start_date = models.DateField(null=True, blank=True)
-    expiration_date = models.DateField(null=True, blank=True)
-    auto_update = models.BooleanField(default=True)
-    extend = models.DateField(null=True, blank=True,
-                              help_text="Enter the date of purchase", )
-
-    promotion = models.ForeignKey(Promotion, null=True, on_delete=models.SET_NULL, blank=True)
-    promotion_start_date = models.DateField(blank=True, null=True)
-
-    def clean(self, *args, **kwargs):
-        if self.extend < self.expiration_date:
-            raise ValidationError('Please choose a future expiration date (or today).')
-        super(Subscription, self).clean(*args, **kwargs)
-
-    def save(self, *args, **kwargs):
-        try:
-            if self.extend > self.expiration_date:
-                date_before_change = self.expiration_date
-                self.expiration_date = self.extend
-
-                subscription_identifier = self.user.subscription.subscription_code
-                days = (self.expiration_date - date_before_change).days
-                extend_a_subscription(headers, subscription_identifier, days)
-        except:
-            self.extend = self.expiration_date
-
-        self.extend = self.expiration_date
-        super(Subscription, self).save(*args, **kwargs)
-
-    def __str__(self):
-        return '{} - {}'.format(self.user, self.plan)
-
-    class Meta:
-        verbose_name = 'Subscription'
-        verbose_name_plural = 'Subscriptions'

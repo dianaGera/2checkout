@@ -2,13 +2,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import redirect, get_object_or_404
-from .models import Plan, Subscription, Promotion, Coupon
+from .models import Plan, Promotion, Coupon
 from .forms import PaymentForm
 from creditcards import types
-from .subscription import headers, add_subscription, stop_subscription, enable_subscription, apply_coupon
+from .subscription import headers, add_subscription, stop_subscription, enable_subscription, apply_coupon, get_subscription_information
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
-from accounts.models import MyUser
+from accounts.models import MyUser, Subscription
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -63,6 +63,8 @@ def subscription_form(request, form, plan, price, start_date=None):
     data['EndUser']['FirstName'] = request.user.first_name
     data['EndUser']['LastName'] = request.user.last_name
     data['EndUser']['CustomerReference'] = request.user.customer_reference
+    # data["MerchantCode"] = 'EYUVIT6T'
+    # data["IsTrial"] = 1
     return data
 
 
@@ -80,13 +82,10 @@ def coupon_discount_value(coupon, plan):
 @login_required()
 def subscription_api(request):
     plans = Plan.objects.all().order_by('pk')
-    promotions = Promotion.objects.filter(coupon_type=Promotion.C_SINGLE)
-    context = {'plans': plans,
-               'promotions': promotions,
-               'basic': plans[1:5],
-               'standard': plans[5:9],
-               'premium': plans[9:13]
-               }
+    user = MyUser.objects.get(customer_reference=request.user.customer_reference)
+    promotions = Promotion.objects.filter(coupon_type=Promotion.C_SINGLE).exclude(
+                                          id__in=user.active_promotions.all())
+    context = dict()
     if request.method == 'POST':
         # if user want to switch to another subscription,
         # then displays confirmation page with remnant computation
@@ -100,22 +99,26 @@ def subscription_api(request):
 
             price_per_day_first = user_data.plan.price / int(period)
             price_per_day_second = change_to.price / int(period)
+            print(user.total_payment)
+            if user.total_payment > 0:
+                remnant = "%.2f" % (change_to.price - (user_data.plan.price - day_pass * price_per_day_first))
+                remnant_to_pay = remnant if float(remnant) > 0 else 0
+            else:
+                remnant_to_pay = change_to.price
 
-            remnant = "%.2f" % (
-                    change_to.price - (user_data.plan.price - day_pass * price_per_day_first)
-            )
-            remnant_to_pay = remnant if float(remnant) > 0 else 0
             request.session['remnant_to_pay'] = remnant_to_pay
             request.session['change_to'] = change_to.pk
+
             context = {
                 'prise': remnant_to_pay,
                 'change_to': change_to
             }
             return render(request, 'checkout/change_subscription.html', context=context)
 
+        # if user want to apply coupon
         if request.POST.get('coupon'):
             try:
-                promotion = Promotion.objects.filter(
+                promotion = Promotion.objects.exclude(id__in=user.active_promotions.all()).filter(
                     Q(Q(coupon_code__coupon=request.POST.get('coupon')) &
                       Q(coupon_code__active=True)) |
                     Q(Q(code=request.POST.get('coupon')) &
@@ -129,17 +132,20 @@ def subscription_api(request):
                     'plan': request.user.subscription.plan
                 }
                 if promotion.code != request.POST.get('coupon'):
-                    context.update(
-                        {
+                    context.update({
                             'coupon': request.POST.get('coupon')
                             if int(promotion.coupon_type) == Promotion.C_MULTIPLE else None
-                        }
-                    )
+                        })
                 return render(request, 'includes/apply_coupon.html', context=context)
 
             except Exception as _ex:
                 messages.add_message(request, messages.INFO, 'Not Found')
-                return render(request, 'checkout/subscription_api.html', context=context)
+    context = {'plans': plans,
+               'promotions': promotions,
+               'basic': plans[1:5],
+               'standard': plans[5:9],
+               'premium': plans[9:13]
+               }
     return render(request, 'checkout/subscription_api.html', context=context)
 
 
@@ -184,7 +190,10 @@ def checkout(request, pk):
                 user = MyUser.objects.get(email=request.user.email)
                 user_coupon = form['coupon'].value()
                 if user_coupon != '':
-                    coupon = Promotion.objects.filter(
+                    user_promotion_list = MyUser.objects.get(
+                        customer_reference=request.user.customer_reference
+                    ).active_promotions.all()
+                    coupon = Promotion.objects.exclude(id__in=user_promotion_list).filter(
                         Q(Q(coupon_code__coupon=user_coupon) &
                           Q(coupon_code__active=True)) |
                         Q(Q(code=user_coupon) &
@@ -209,6 +218,8 @@ def checkout(request, pk):
                     form_data = subscription_form(request, form, plan, price, start_date)
 
                 subscription_code = add_subscription(headers, data)
+                user.total_payment += price
+                user.save()
 
                 # apply coupon discount for next billing period if it is
                 if coupon:
@@ -230,6 +241,8 @@ def checkout(request, pk):
                         coupon = Coupon.objects.get(coupon=form['coupon'].value())
                         coupon.active = False
                         coupon.save()
+                    else:
+                        request.user.active_promotions.add(coupon.pk)
 
                 # add subscription to database
                 Subscription.objects.create(
@@ -277,6 +290,8 @@ def change_subscription(request):
                 expiration_date=data['ExpirationDate'],
                 start_date=data['StartDate']
             )
+            request.user.total_payment += float(remnant_to_pay)
+            request.user.save()
         return redirect('subscription_api')
     else:
         form = PaymentForm()

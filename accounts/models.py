@@ -1,5 +1,8 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
+from checkout.subscription import headers, extend_a_subscription
+from django.core.exceptions import ValidationError
+from checkout.models import Promotion, Plan
 
 
 class MyUserManager(BaseUserManager):
@@ -47,6 +50,9 @@ class MyUser(AbstractBaseUser):
     send_email = models.BooleanField(default=True)
 
     applied_trial = models.BooleanField(default=False)
+    active_promotions = models.ManyToManyField(Promotion, blank=True)
+
+    total_payment = models.FloatField(default=0)
 
     objects = MyUserManager()
 
@@ -71,3 +77,41 @@ class MyUser(AbstractBaseUser):
         "Is the user a member of staff?"
         # Simplest possible answer: All admins are staff
         return self.is_admin
+
+
+class Subscription(models.Model):
+    user = models.OneToOneField(MyUser, on_delete=models.CASCADE, related_name='subscription', null=True, blank=True)
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
+    subscription_code = models.CharField(max_length=10, null=False, blank=False)
+    start_date = models.DateField(null=True, blank=True)
+    expiration_date = models.DateField(null=True, blank=True)
+    auto_update = models.BooleanField(default=True)
+    extend = models.DateField(null=True, blank=True,
+                              help_text="Enter the date of purchase", )
+
+    def clean(self, *args, **kwargs):
+        if self.extend < self.expiration_date:
+            raise ValidationError('Please choose a future expiration date (or today).')
+        super(Subscription, self).clean(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        try:
+            if self.extend > self.expiration_date:
+                date_before_change = self.expiration_date
+                self.expiration_date = self.extend
+
+                subscription_identifier = self.user.subscription.subscription_code
+                days = (self.expiration_date - date_before_change).days
+                extend_a_subscription(headers, subscription_identifier, days)
+        except:
+            self.extend = self.expiration_date
+
+        self.extend = self.expiration_date
+        super(Subscription, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return '{} - {}'.format(self.user, self.plan)
+
+    class Meta:
+        verbose_name = 'Subscription'
+        verbose_name_plural = 'Subscriptions'

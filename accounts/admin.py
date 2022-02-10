@@ -4,7 +4,7 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
-from accounts.models import MyUser
+from accounts.models import MyUser, Subscription
 
 
 class UserCreationForm(forms.ModelForm):
@@ -71,8 +71,9 @@ class UserAdmin(BaseUserAdmin):
                            'last_name',
                            'country',
                            'city',
-                           'email', 'password', 'applied_trial')}),
+                           'email', 'password')}),
         ('Permissions', {'fields': ('is_admin',)}),
+        ('Other', {'fields': ('total_payment', 'active_promotions', 'applied_trial')}),
     )
     # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
     # overrides get_fieldsets to use this attribute when creating a user.
@@ -86,6 +87,14 @@ class UserAdmin(BaseUserAdmin):
     search_fields = ('email',)
     ordering = ('email',)
     filter_horizontal = ()
+
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'user', 'plan', 'subscription_code', 'start_date', 'expiration_date', 'auto_update')
+    fields = ('user', 'plan', 'subscription_code', 'start_date', 'expiration_date', 'extend', 'auto_update')
+
+    # readonly_fields = ("start_date", "expiration_date")
 
 
 # Now register the new UserAdmin...

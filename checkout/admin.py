@@ -1,13 +1,5 @@
 from django.contrib import admin
-from .models import Plan, PlanItem, Subscription, Promotion, Coupon
-
-
-@admin.register(Subscription)
-class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'user', 'plan', 'subscription_code', 'start_date', 'expiration_date', 'auto_update', 'promotion')
-    fields = ('user', 'plan', 'subscription_code', 'start_date', 'expiration_date', 'extend', 'auto_update', 'trial', 'promotion')
-
-    # readonly_fields = ("start_date", "expiration_date")
+from .models import Plan, PlanItem, Promotion, Coupon
 
 
 class PlanAdmin(admin.ModelAdmin):

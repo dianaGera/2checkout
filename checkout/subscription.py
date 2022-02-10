@@ -32,7 +32,7 @@ def headers():
 def add_subscription(headers, data):
     headers = headers()
     data = str(data).replace('None', 'null').replace('\'', "\"").encode("utf-8")
-    # rer = requests.post('https://api.2checkout.com/rest/6.0/subscriptions/', headers=headers, data=data)
+    # r = requests.post('https://api.2checkout.com/rest/6.0/subscriptions/', headers=headers, data=data)
     r = urllib.request.Request('https://api.2checkout.com/rest/6.0/subscriptions/', headers=headers, data=data)
     print(r.__dict__)
     with urllib.request.urlopen(r) as response:
@@ -203,12 +203,13 @@ def create_promotion(data):
     return print('get_all_active_promotions', response)
 
 
+# disable
 def get_customer_next_renewal_price(subscription_code, currency):
     """Retrieve next price for subscription"""
     header = headers()
-    request_url = f'https://api.2checkout.com/rest/6.0/subscription/{subscription_code}/renewal/orice/{currency}/'
+    request_url = f'https://api.2checkout.com/rest/6.0/subscription/{subscription_code}/renewal/price/{currency}/'
     response = requests.get(request_url, headers=header)
-    return print('get_all_active_promotions', response)
+    return print('get_all_active_promotions', response, response.__dict__)
 
 
 promotion = {

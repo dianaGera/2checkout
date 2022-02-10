@@ -51,8 +51,9 @@
                 <h2>Want to change subscription?</h2>
                 {% include 'includes/change_subscription_list.html' %}
             </div>
-
+            {% if promotions %}
             {% include 'includes/promotion.html' %}
+            {% endif %}
         <form action="{% url 'subscription_api' %}" method="post">
             {% csrf_token %}
             <div class="input-group mb-3" style="max-width: 500px; margin: auto;">
