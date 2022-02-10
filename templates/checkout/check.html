@@ -8,41 +8,41 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 {% endblock %}
 
-{% block javascripts %}
-    <script>
-        function validate(coupon) {
-            var input = document.getElementById('in').value;
-            $.ajax({
-                url: "/subscription/api/get_coupon_code/?format=json",
-                dataType: "json",
-                cache: "false",
-                success: function (t) {
-                    old_price = document.getElementById('old_price').value
-                    for(var key in t) {
-                        var coupon = key;
-                        if(input.toString().toUpperCase() == coupon.toString().toUpperCase()){
-                            if(t[coupon].toString().includes("%")) {
-                                new_price = parseFloat(old_price) - (parseFloat(old_price) * parseFloat(t[coupon])) / 100
-                            }else {
-                                new_price = old_price - parseFloat(t[coupon])
-                            }
-                            document.getElementById('new_price').innerHTML = new_price
-                            document.getElementById("price").value = new_price;
-                            document.getElementById('err').innerHTML = '';
-                            return true;
-                        } else {
-                            document.getElementById('new_price').innerHTML = old_price
-                            document.getElementById('err').innerHTML="Invalid coupon";
-                        }
-                    }
-                },
-                error: function (e, t, a) {
-                    alert(e.status)
-                }
-            })
-        }
-    </script>
-{% endblock %}
+<!--{% block javascripts %}-->
+<!--    <script>-->
+<!--        function validate(coupon) {-->
+<!--            var input = document.getElementById('in').value;-->
+<!--            $.ajax({-->
+<!--                url: "/subscription/api/get_coupon_code/?format=json",-->
+<!--                dataType: "json",-->
+<!--                cache: "false",-->
+<!--                success: function (t) {-->
+<!--                    old_price = document.getElementById('old_price').value-->
+<!--                    for(var key in t) {-->
+<!--                        var coupon = key;-->
+<!--                        if(input.toString().toUpperCase() == coupon.toString().toUpperCase()){-->
+<!--                            if(t[coupon].toString().includes("%")) {-->
+<!--                                new_price = parseFloat(old_price) - (parseFloat(old_price) * parseFloat(t[coupon])) / 100-->
+<!--                            }else {-->
+<!--                                new_price = old_price - parseFloat(t[coupon])-->
+<!--                            }-->
+<!--                            document.getElementById('new_price').innerHTML = new_price-->
+<!--                            document.getElementById("price").value = new_price;-->
+<!--                            document.getElementById('err').innerHTML = '';-->
+<!--                            return true;-->
+<!--                        } else {-->
+<!--                            document.getElementById('new_price').innerHTML = old_price-->
+<!--                            document.getElementById('err').innerHTML="Invalid coupon";-->
+<!--                        }-->
+<!--                    }-->
+<!--                },-->
+<!--                error: function (e, t, a) {-->
+<!--                    alert(e.status)-->
+<!--                }-->
+<!--            })-->
+<!--        }-->
+<!--    </script>-->
+<!--{% endblock %}-->
 
 {% block content %}
     <h2 style="text-align:center;">Chosen plan {{ plan.name }} at the price of <span id="new_price" name='new_price'>{{ plan.price }}</span> per month</h2>
@@ -78,15 +78,28 @@
                     <div class="form-group">
                         <label>Have coupon?</label>
                         <div class="input-group"> 
-                            <input type="text" class="form-control" name="coupon" id="in" placeholder="Coupon code">
-                            <span class="input-group-append">
-                                <input class="btn btn-primary btn-apply" type="button" value="Submit" onClick="validate(coupon)" />
-                            </span>
+                            <input type="text" class="form-control" name="coupon" placeholder="Coupon code">
                         </div>
                     </div>
                     <span id="err"></span>
                 </div>
             </div>
+            {% if not request.user.applied_trial %}
+            <div class="row justify-content-md-center">
+                <div class="col-md-6 mb-3">
+                    <div class="form-group">
+                        <label style="width: 200px">Apply trial period?</label>
+                            <input type="checkbox" class="" style="width: 20px; margin-left: -30px"
+                                   name="trial" id="in"
+                                   placeholder="Trial">
+                        <p style="font-size: small; color: gray">The trial period is valid for 7 days. After that, the
+                            subscription will be renewed
+                            automatically. You can cancel auto-subscription in the settings</p>
+                    </div>
+                    <span id="err"></span>
+                </div>
+            </div>
+            {% endif %}
             <input id="price" name="price" hidden value="{{ plan.price }}">
             <input id="old_price" name="old_price" hidden value="{{ plan.price }}">
             <div class="row justify-content-md-center">
@@ -97,4 +110,9 @@
             </div>
         </form>
     </div>
+{% for message in messages %}
+<div class="alert alert-secondary" role="alert" style="max-width: 500px; margin: auto; text-align: center">
+    {{message}}
+</div>
+{% endfor %}
 {% endblock %}

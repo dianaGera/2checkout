@@ -31,7 +31,7 @@ class UserRegistrationForm(forms.ModelForm):
     first_name = forms.CharField(label='Enter first name',
                              widget=forms.TextInput(attrs={'class': 'form-control'}))
     last_name = forms.CharField(label='Enter last name',
-                             widget=forms.TextInput(attrs={'class': 'form-control'}))                         
+                             widget=forms.TextInput(attrs={'class': 'form-control'}))
     email = forms.EmailField(label='Enter email',
                              widget=forms.EmailInput(attrs={'class': 'form-control'}))
     password = forms.CharField(label='Enter password',
@@ -62,6 +62,7 @@ class BillingForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'country', 'city', 'address')
+
 
 class UserUpdateForm(forms.ModelForm):
     class Meta:

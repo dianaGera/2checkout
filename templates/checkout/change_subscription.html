@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="content-section">
+    <h1 style="text-align:center;">Change subscription {{request.user.subscription.plan}} to {{change_to}}</h1>
+    <h3 class="nav-item nav-link">Are you sure you want to change your subscription?</h3>
+    <p>You have to pay {{prise}}</p>
+    <div class="modal-footer">
+        <a href="{% url 'subscription_api' %}" class="btn btn-secondary"
+           type="button">No</a>
+        <a href="{% url 'change_subscription' %}" class="btn btn-danger"
+           type="button" >Yes</a>
+    </div>
+</div>
+{% endblock %}

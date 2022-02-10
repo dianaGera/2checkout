@@ -1,8 +1,13 @@
+import urllib.request
+
+import requests
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from accounts.forms import UserLoginForm, UserRegistrationForm, UserUpdateForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, logout, login
+from checkout.subscription import headers
+
 
 def login_view(request):
     form = UserLoginForm(request.POST or None)
@@ -21,6 +26,15 @@ def logout_view(request):
     return redirect('home')
 
 
+def create_customer(headers, data):
+    headers = headers()
+    r = urllib.request.Request('https://api.2checkout.com/rest/6.0/customers/', headers=headers, data=data)
+    requests.post('https://api.2checkout.com/rest/6.0/customers/', headers=headers, data=data)
+    with urllib.request.urlopen(r) as response:
+        resp = response.read()
+    return resp.decode('utf-8').replace("\"", '')
+
+
 def register_view(request):
     form = UserRegistrationForm(request.POST or None)
     if form.is_valid():
@@ -30,10 +44,25 @@ def register_view(request):
 
         u_email = form.cleaned_data.get('email')
         u_password = form.cleaned_data['password']
-
-        user = authenticate(email=u_email,
-                            password=u_password)
+        user = authenticate(email=u_email, password=u_password)
         login(request, user)
+
+        data = {
+                "FirstName": request.user.first_name,
+                "LastName": request.user.last_name,
+                "Email": request.user.email,
+                "CustomerReference": None,
+                "City": request.user.address,
+                "Address1": request.user.address,
+                "Company": "RockLab.io",
+                "FiscalCode": " ",
+                "Zip": "WC1A1AH",
+                "CountryCode": "gb",
+                "Fax": "",
+        }
+        data = str(data).replace('None', 'null').replace('\'', "\"").encode("utf-8")
+        request.user.customer_reference = create_customer(headers, data)
+        request.user.save()
         return render(request, 'app/home.html',
                       {'new_user': new_user})
         #return render(request, 'accounts/register_done.html', {'new_user': new_user})

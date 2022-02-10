@@ -24,7 +24,6 @@ INSTALLED_APPS = [
     'widget_tweaks',
     "graphene_django",
     "serious_django_graphene",
-
     'accounts',
     'checkout',
 ]

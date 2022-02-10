@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="content-section">
+    <h1 style="text-align:center;">Apply Promotion {{promotion}}</h1>
+    <h3 class="nav-item nav-link">Are you sure you want to apply {{promotion}}</h3>
+    <p>This promotion gives you
+        {%if promotion.discount_type == 1%}{{promotion.discount_value}}%
+        {%else%}{{promotion.discount_value}} usd
+        {%endif%}
+        discount.<br>
+        Changes will take effect immediately
+        If you are already using a coupon, it will be canceled</p>
+    <div class="modal-footer">
+        <a href="{% url 'subscription_api' %}" class="btn btn-secondary"
+           type="button">No</a>
+
+        <form action="{% url 'apply_vouchers' subscription promotion.pk %}"
+              method="post">
+            {%  csrf_token%}
+            <input type="text" name="coupon" value="{{coupon}}" hidden>
+            <button class="btn btn-danger" type="submit">Yes</button>
+        </form>
+
+    </div>
+</div>
+{% endblock %}

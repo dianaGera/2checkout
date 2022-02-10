@@ -31,7 +31,7 @@
                                             <li><span class="fa-li"><i class="fas fa-check"></i></span>{{ item }}</li>
                                         {% endfor %}
                                     </ul>
-                                    <a href="{% url 'check' plan.id %}" class="btn btn-block btn-primary text-uppercase"
+                                    <a href="{% url 'check' plan.pk %}" class="btn btn-block btn-primary text-uppercase"
                                        type="button">Subscribe</a>
                                 </div>
                             </div>
@@ -40,14 +40,36 @@
                 </div>
             </div>
         {% else %}
-            <div class="content-section" id="board-table">
+            <div class="content-section m-2" id="board-table">
                 <h2>Subscription is {% if user.subscription.trial %}trial{% else %}valid{% endif %}</h2>
                 <h8>Till {{ user.subscription.expiration_date }}</h8>
                 <h6>{% if user.subscription.promotion %}Your voucher has been applied. It will take effect from the next cycle.{% endif %}</h6>
                 <br/>
                 {% include 'includes/cancel_enable_subscription.html' %}
             </div>
+            <div class="content-section m-2" id="board-table">
+                <h2>Want to change subscription?</h2>
+                {% include 'includes/change_subscription_list.html' %}
+            </div>
+
             {% include 'includes/promotion.html' %}
+        <form action="{% url 'subscription_api' %}" method="post">
+            {% csrf_token %}
+            <div class="input-group mb-3" style="max-width: 500px; margin: auto;">
+                <input type="text" class="form-control" placeholder="Enter coupon" aria-label="Find coupon"
+                       aria-describedby="basic-addon2" name="coupon">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="submit">Find</button>
+                </div>
+            </div>
+        </form>
+        {% for message in messages %}
+        <div class="alert alert-secondary" role="alert" style="max-width: 500px; margin: auto; text-align: center">
+            {{message}}
+        </div>
+        {% endfor %}
+
         {% endif %}
     </section>
+
 {% endblock %}

@@ -1,0 +1,95 @@
+<p>Your subscription <b>{{user.subscription.plan}}</b><br>
+    The next charge will occur immediately<br/>
+    To review all subscriptions, click on button.
+</p>
+<button type="button" class="btn btn-warning" data-toggle="modal"
+        data-target="#exampleModal_">
+    Change subscription
+</button>
+<!-- Modal -->
+<div class="modal fade" id="exampleModal_" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalLabel_"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel_">Change subscription</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Chose another available subscription:
+                <table class="table" id="book-table">
+                    <thead class="thead-inverse">
+                    <tr>
+                        <th>Plan</th>
+                        <th>1 month</th>
+                        <th>3 month</th>
+                        <th>6 month</th>
+                        <th>1 year</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                <tr><td class="align-middle">Basic</td>
+                    {% for plan in basic %}
+                    {%if request.user.subscription.plan == plan%}
+                    <td class="align-middle disable"><span class="btn btn-block btn-primary text-uppercase"
+                               style="background-color: #6c757d; border-radius: 5px; border-color: #6c757d; width: 70px;">
+                        {{ plan.price }}$</span>
+                    </td>
+                    {%else%}
+                    <td class="align-middle">
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            <button type="submit" name="subscription" value="{{ plan.pk }}" style="width: 70px;"
+                                    class="btn btn-block btn-primary text-uppercase">{{ plan.price }}$</button>
+                        </form>
+                    </td>
+                    {%endif%}
+                    {% endfor %}
+                </tr>
+                <tr><td class="align-middle">Standard</td>
+                    {% for plan in standard %}
+                    {%if request.user.subscription.plan == plan%}
+                    <td class="align-middle disable"><span class="btn btn-block btn-primary text-uppercase"
+                        style="background-color: #6c757d; border-radius: 5px; border-color: #6c757d; width: 70px;">
+                        {{ plan.price }}$</span>
+                    </td>
+                    {%else%}
+                    <td class="align-middle">
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            <button type="submit" name="subscription" value="{{ plan.pk }}" style="width: 70px;"
+                                    class="btn btn-block btn-primary text-uppercase">{{ plan.price }}$</button>
+                        </form>
+                    </td>
+                    {%endif%}
+                    {% endfor %}
+                </tr>
+                <tr><td class="align-middle">Premium</td>
+                    {% for plan in premium %}
+                    {%if request.user.subscription.plan == plan%}
+                    <td class="align-middle disable"><span class="btn btn-block btn-primary text-uppercase"
+                                                           style="background-color: #6c757d; border-radius: 5px; border-color: #6c757d; width: 70px;">
+                        {{ plan.price }}$</span>
+                    </td>
+                    {%else%}
+                    <td class="align-middle">
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            <button type="submit" name="subscription" value="{{ plan.pk }}" style="width: 70px;"
+                                    class="btn btn-block btn-primary text-uppercase">{{ plan.price }}$</button>
+                        </form>
+                    </td>
+                    {%endif%}
+                    {% endfor %}
+                </tr>
+                </tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+</div>

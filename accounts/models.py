@@ -39,15 +39,14 @@ class MyUser(AbstractBaseUser):
     country = models.CharField("Country", max_length=30, blank=True)
     city = models.CharField("City", max_length=30, blank=True)
     address = models.CharField("address", max_length=30, blank=True)
+    email = models.EmailField(verbose_name='email address', max_length=255, unique=True)
+    customer_reference = models.CharField(max_length=20, null=True)
 
-    email = models.EmailField(
-        verbose_name='email address',
-        max_length=255,
-        unique=True,
-    )
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     send_email = models.BooleanField(default=True)
+
+    applied_trial = models.BooleanField(default=False)
 
     objects = MyUserManager()
 
