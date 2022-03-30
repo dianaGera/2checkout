@@ -30,4 +30,4 @@ graphql-relay==2.0.0
 serious-django-graphene==0.5.1
 
 python-dotenv==0.15.0
-
+django-coupon-management==0.3.2

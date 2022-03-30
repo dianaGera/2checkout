@@ -8,7 +8,6 @@ import requests
 from ast import literal_eval
 import json
 
-
 def headers():
     SECRET_KEY_CHECKOUT = os.getenv('SECRET_KEY_CHECKOUT')
     VENDOR_CODE = os.getenv('VENDOR_CODE')
@@ -27,6 +26,21 @@ def headers():
     }
 
     return headers
+
+
+
+# API endpoint for creating payment
+def create_orders(headers, data):
+    headers = headers()
+    data = str(data).replace('None', 'null').replace('\'', "\"").encode("utf-8")
+    r = requests.post('https://api.2checkout.com/rest/6.0/orders/', headers=headers, data=data)
+    # r = urllib.request.Request('https://api.2checkout.com/rest/6.0/orders/', headers=headers, 
+
+
+    print(r.__dict__)
+    # with urllib.request.urlopen(r) as response:
+    #     resp = response.read()
+    # return resp.decode('utf-8').replace("\"", '')
 
 
 def add_subscription(headers, data):
@@ -210,35 +224,3 @@ def get_customer_next_renewal_price(subscription_code, currency):
     request_url = f'https://api.2checkout.com/rest/6.0/subscription/{subscription_code}/renewal/price/{currency}/'
     response = requests.get(request_url, headers=header)
     return print('get_all_active_promotions', response, response.__dict__)
-
-
-promotion = {
-    "Type": "REGULAR",
-    "ApplyRecurring": None,
-    "ChannelType": "ECOMMERCE",
-    "Coupon": {
-        "Codes": [
-            "code1",
-            "code2"
-        ],
-        "Type": "MULTIPLE"
-    },
-    "Description": "Promo description1",
-    "Discount": {
-        "Type": "PERCENT",
-        "Value": 41
-    },
-    "Enabled": True,
-    "EndDate": None,
-    "InstantDiscount": 0,
-    "MaximumOrdersNumber": None,
-    "MaximumQuantity": None,
-    "Name": "Promo percentage REST",
-    "Products": [
-        {
-            "Code": "my_subscription_1"
-        }
-    ],
-    "PublishToAffiliatesNetwork": 0,
-    "StartDate": None
-}

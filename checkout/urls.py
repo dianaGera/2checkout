@@ -11,5 +11,5 @@ urlpatterns = [
     path('stop_subscription/<int:pk>/', stop_auto_subscription, name='stop_auto_subscription'),
     path('enable_subscription/<int:pk>/', enable_auto_subscription, name='enable_auto_subscription'),
     path('change_subscription/', change_subscription, name='change_subscription'),
-    path('apply_coupon/<int:pk>/<int:coupon_id>/', apply_vouchers, name='apply_vouchers')
+    path('apply_coupon/<int:pk>/<int:coupon_id>/', apply_vouchers, name='apply_vouchers'),
 ]

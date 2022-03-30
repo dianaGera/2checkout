@@ -6,6 +6,8 @@
     <link href='https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/3.6.95/css/materialdesignicons.css'>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://2pay-js.2checkout.com/v1/2pay.js"></script>
 {% endblock %}
 
 <!--{% block javascripts %}-->
@@ -45,74 +47,153 @@
 <!--{% endblock %}-->
 
 {% block content %}
-    <h2 style="text-align:center;">Chosen plan {{ plan.name }} at the price of <span id="new_price" name='new_price'>{{ plan.price }}</span> per month</h2>
-    <div class="content-section">
-        <form action="" method="post">
-            {% csrf_token %}
-            <div class="row justify-content-md-center">
-                <div class="col-md-6 mb-3">
-                    <label for="id_cc_number">Credit card number:</label>
-                    <input type="tel" name="cc_number" class="form-control" pattern="\d{16}"
-                           autocomplete="cc-number"
-                           autocorrect="off" spellcheck="off" autocapitalize="off" required="" id="id_cc_number">
-                    <div class="invalid-feedback"> Credit card number is required</div>
+
+
+<!-- 2PAY.JS TOKEN -->
+
+<<div class="container">
+    <div class="row justify-content-md-center mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Chosen plan {{ plan.name }} at the price of
+                        <span id="new_price" name='new_price'>{{ plan.price }}</span> per month</h5>
+
+                    <form id="payment-form" type="post" action="{%url 'check' plan.id%}">
+                        {% csrf_token %}
+                        <div class="forms-group">
+                            <label for="name" class="label control-label">Name</label>
+                            <input type="text" id="name" class="field form-control">
+                        </div>
+
+                        <div id="card-element"> 
+                           <!-- // A TCO IFRAME will be inserted here. -->
+                        </div>
+
+                        <button class="btn btn-primary" type="submit">Submit</button>
+                    </form>
                 </div>
             </div>
-            <div class="row justify-content-md-center">
-                <div class="col-md-3 mb-3">
-                    <label for="id_cc_expiry">Expiration Date:</label>
+        </div>
+    </div>
+</div>
+<script>
+  window.addEventListener('load', function() {
+  // Initialize the 2Pay.js client.
+  let jsPaymentClient = new TwoPayClient('AVLRNG');
+
+  // Create the component that will hold the card fields.
+  let component = jsPaymentClient.components.create('card');
+
+  // Mount the card fields component in the desired HTML tag. This is where the iframe will be located.
+  component.mount('#card-element');
+
+  // Handle form submission.
+  document.getElementById('payment-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    // Extract the Name field value
+    const billingDetails = {
+      name: document.querySelector('#name').value
+    };
+
+    // Call the generate method using the component as the first parameter
+    // and the billing details as the second one
+    jsPaymentClient.tokens.generate(component, billingDetails).then((response) => {
+      console.log(response.token);
+
+      jQuery.ajax(
+        {
+            'url': '/subscription/api/{{plan.id}}/',
+            'type': 'POST',
+            'contentType': 'application/json; charset=UTF-8',
+            'data': JSON.stringify({'content':response.token}),
+            'dataType': 'json',
+            'success': function ( return_data ) {
+
+                                //success body
+
+                              }
+        }
+);
+    }).catch((error) => {
+      console.error(error);
+    });
+  });
+});
+</script> 
+
+
+
+<!-- Payment form -->
+   <!-- <h2 style="text-align:center;">Chosen plan {{ plan.name }} at the price of <span id="new_price" name='new_price'>{{ plan.price }}</span> per month</h2>
+   <div class="content-section">
+       <form action="" method="post" novalidate>
+           {% csrf_token %}
+           <div class="row justify-content-md-center">
+               <div class="col-md-6 mb-3">
+                   <label for="id_cc_number">Credit card number:</label>
+                   <input type="tel" name="cc_number" class="form-control" pattern="\d{16}"
+                          autocomplete="cc-number"
+                          autocorrect="off" spellcheck="off" autocapitalize="off" required="" id="id_cc_number">
+                   <div class="invalid-feedback"> Credit card number is required</div>
+               </div>
+           </div> 
+           <div class="row justify-content-md-center">
+               <div class="col-md-3 mb-3">
+                   <label for="id_cc_expiry">Expiration Date:</label>
                     <input type="text" name="cc_expiry" class="form-control" pattern="\d\d/\d\d" placeholder="MM/YY"
-                           autocomplete="cc-exp" autocorrect="off" spellcheck="off" autocapitalize="off" required=""
+                          autocomplete="cc-exp" autocorrect="off" spellcheck="off" autocapitalize="off" required=""
                            id="id_cc_expiry">
                     <div class="invalid-feedback"> Expiration date required</div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="id_cc_code">CVV/CVC:</label>
-                    <input type="tel" name="cc_code" class="form-control" pattern="\d{3}" autocomplete="cc-csc"
+               </div>
+               <div class="col-md-3 mb-3">
+                   <label for="id_cc_code">CVV/CVC:</label>
+                   <input type="tel" name="cc_code" class="form-control" pattern="\d{3}" autocomplete="cc-csc"
                            autocorrect="off" spellcheck="off" autocapitalize="off" required="" id="id_cc_code">
-                    <div class="invalid-feedback"> Security code required</div>
-                </div>
-            </div>
-            <div class="row justify-content-md-center">
-                <div class="col-md-6 mb-3">
-                    <div class="form-group">
+                   <div class="invalid-feedback"> Security code required</div>
+               </div>
+           </div>
+           <div class="row justify-content-md-center">
+               <div class="col-md-6 mb-3">
+                   <div class="form-group">
                         <label>Have coupon?</label>
-                        <div class="input-group"> 
-                            <input type="text" class="form-control" name="coupon" placeholder="Coupon code">
-                        </div>
-                    </div>
-                    <span id="err"></span>
-                </div>
-            </div>
-            {% if not request.user.applied_trial %}
-            <div class="row justify-content-md-center">
-                <div class="col-md-6 mb-3">
-                    <div class="form-group">
-                        <label style="width: 200px">Apply trial period?</label>
-                            <input type="checkbox" class="" style="width: 20px; margin-left: -30px"
-                                   name="trial" id="in"
-                                   placeholder="Trial">
-                        <p style="font-size: small; color: gray">The trial period is valid for 7 days. After that, the
-                            subscription will be renewed
-                            automatically. You can cancel auto-subscription in the settings</p>
-                    </div>
-                    <span id="err"></span>
-                </div>
-            </div>
-            {% endif %}
-            <input id="price" name="price" hidden value="{{ plan.price }}">
-            <input id="old_price" name="old_price" hidden value="{{ plan.price }}">
-            <div class="row justify-content-md-center">
-                <div class="col-md-6 mb-3">
-                    <hr>
-                    <button class="btn btn-primary btn-lg btn-block" type="submit">Continue to checkout</button>
-                </div>
-            </div>
-        </form>
-    </div>
+                       <div class="input-group">
+                           <input type="text" class="form-control" name="coupon" placeholder="Coupon code">
+                       </div>
+                   </div>
+                   <span id="err"></span>
+               </div>
+           </div>
+           {% if not request.user.applied_trial %}
+           <div class="row justify-content-md-center">
+               <div class="col-md-6 mb-3">
+                   <div class="form-group">
+                       <label style="width: 200px">Apply trial period?</label>
+                           <input type="checkbox" class="" style="width: 20px; margin-left: -30px"
+                                  name="trial" id="in"
+                                  placeholder="Trial">
+                       <p style="font-size: small; color: gray">The trial period is valid for 7 days. After that, the
+                           subscription will be renewed
+                           automatically. You can cancel auto-subscription in the settings</p>
+                   </div>
+                   <span id="err"></span>
+               </div>
+           </div>
+           {% endif %}
+           <input id="price" name="price" hidden value="{{ plan.price }}">
+           <input id="old_price" name="old_price" hidden value="{{ plan.price }}">
+           <div class="row justify-content-md-center">
+               <div class="col-md-6 mb-3">
+                   <hr>
+                   <button class="btn btn-primary btn-lg btn-block" type="submit">Continue to checkout</button>
+               </div>
+           </div>
+       </form>
+   </div>
 {% for message in messages %}
 <div class="alert alert-secondary" role="alert" style="max-width: 500px; margin: auto; text-align: center">
-    {{message}}
+   {{message}}
 </div>
-{% endfor %}
+{% endfor %}  -->
 {% endblock %}
