@@ -8,7 +8,9 @@ import requests
 from ast import literal_eval
 import json
 
+
 def headers():
+    '''Headers that use for authentication in all of requests'''
     SECRET_KEY_CHECKOUT = os.getenv('SECRET_KEY_CHECKOUT')
     VENDOR_CODE = os.getenv('VENDOR_CODE')
     REQUEST_DATE_TIME = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
@@ -28,9 +30,8 @@ def headers():
     return headers
 
 
-
-# API endpoint for creating payment
 def create_orders(headers, data):
+    '''API endpoint for creating payment'''
     headers = headers()
     data = str(data).replace('None', 'null').replace('\'', "\"").encode("utf-8")
     r = requests.post('https://api.2checkout.com/rest/6.0/orders/', headers=headers, data=data)
@@ -44,6 +45,7 @@ def create_orders(headers, data):
 
 
 def add_subscription(headers, data):
+    '''Apply subscription for user. This is not the paymethod. Connects subscription to user in 2checkout history'''
     headers = headers()
     data = str(data).replace('None', 'null').replace('\'', "\"").encode("utf-8")
     # r = requests.post('https://api.2checkout.com/rest/6.0/subscriptions/', headers=headers, data=data)
@@ -55,11 +57,13 @@ def add_subscription(headers, data):
 
 
 def delete_subscription(headers, subscription_code):
+    '''Unsubscribe a user'''
     headers = headers()
     return requests.delete(f'https://api.2checkout.com/rest/6.0/subscriptions/{subscription_code}/', headers=headers)
 
 
 def search_subscriptions(headers, email):
+    '''Extract subscription from 2checkout account'''
     r = requests.get('https://api.2checkout.com/rest/6.0/subscriptions/', headers=headers, params={'Email':'{}'.format(email)})
     subscription_info = r.text
     subscription_info = dict(literal_eval(subscription_info.replace('true', '\"true\"').replace('false', '\"false\"').replace('null', '\"null\"')))
@@ -76,7 +80,7 @@ def get_renewal_link(subscription_code):
 
 
 def stop_subscription(header, subscription_identifier):
-    """Остановить автоматическое продление подписки"""
+    """Stop autorenewal"""
     request_url = 'https://api.2checkout.com/rest/6.0/subscriptions/{}/renewal/'.format(subscription_identifier)
 
     headers = header()
@@ -91,9 +95,9 @@ def stop_subscription(header, subscription_identifier):
 
 
 def enable_subscription(header, subscription_identifier):
-    """Возобновить автоматическое продление подписки"""
+    """Enable authorenewal"""
 
-    """PUT: метод позволит продлить подписку контролируя цену и количество дней
+    """PUT: If use PUT method it's enable authorenewal and to control (set) the price and duration   
     {
       "Currency": "usd",
       "Days": 15,
@@ -109,7 +113,7 @@ def enable_subscription(header, subscription_identifier):
 
 
 def extend_a_subscription(header, subscription_identifier, days):
-    """Продлить подписку"""
+    """Extend subscription"""
     request_url = 'https://api.2checkout.com/rest/6.0/subscriptions/{}/history/?Days={}'.format(subscription_identifier, days)
     headers = header()
     req = urllib.request.Request(request_url, headers=headers, method="PUT")

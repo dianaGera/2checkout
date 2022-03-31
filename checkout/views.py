@@ -21,6 +21,7 @@ from .subscription import headers, add_subscription, stop_subscription, enable_s
 from accounts.models import MyUser, Subscription
 
 
+# This form used as a request body for creating a subscription
 def subscription_form(request, form, plan, price, start_date=None):
     cc_number = form.cleaned_data.get('cc_number')
     cc_expiry = str(form.cleaned_data.get('cc_expiry')).split('-')
@@ -66,7 +67,7 @@ def subscription_form(request, form, plan, price, start_date=None):
     data['EndUser']['CustomerReference'] = request.user.customer_reference
     return data
 
-
+# This form used as a request body for creating a payments by credit card
 def payment_form(request, form, plan, price, start_date=None):
     cc_number = form.cleaned_data.get('cc_number')
     cc_expiry = str(form.cleaned_data.get('cc_expiry')).split('-')
@@ -96,6 +97,7 @@ def payment_form(request, form, plan, price, start_date=None):
     return payment_data
 
 
+# compute the total price when discount was applied
 def coupon_discount_value(coupon, plan):
     
     if coupon.discount_type == Promotion.D_FIXED:
@@ -110,8 +112,6 @@ def coupon_discount_value(coupon, plan):
 
 @login_required()
 def subscription_api(request):
-    # print(headers())
-    # create_orders()
     plans = Plan.objects.all().order_by('pk')
     user = MyUser.objects.get(customer_reference=request.user.customer_reference)
     promotions = Promotion.objects.filter(coupon_type=Promotion.C_SINGLE).exclude(
@@ -180,6 +180,7 @@ def subscription_api(request):
     return render(request, 'checkout/subscription_api.html', context=context)
 
 
+# Make payments using 2checkout service
 def subscription_service(request):
     SECRET_KEY_CHECKOUT = os.getenv('SECRET_KEY_CHECKOUT')
     if request.user.is_authenticated:
@@ -416,6 +417,7 @@ def apply_vouchers(request, pk, coupon_id):
     return HttpResponse(status=200)
 
 
+# Instant payment notification 
 @csrf_exempt
 def create_order(request):
     """ Create subscription locally if it was successfully paid """
